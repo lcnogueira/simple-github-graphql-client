@@ -1,22 +1,25 @@
 import React from 'react';
 
 import Link from '../../Link';
-import gql from 'graphql-tag';
+
 import { Mutation } from 'react-apollo';
 import Button from '../../Button';
 
 import '../../style.css';
 
-const STAR_REPOSITOY = gql`
-  mutation($id: ID!) {
-    addStar(input: { starrableId: $id }) {
-      starrable {
-        id
-        viewerHasStarred
-      }
-    }
-  }
-`;
+import {
+  UNSTAR_REPOSITORY,
+  STAR_REPOSITORY,
+  WATCH_REPOSITORY,
+} from '../mutations';
+
+const VIEWER_SUBSCRIPTIONS = {
+  SUBSCRIBED: 'SUBSCRIBED',
+  UNSUBSCRIBED: 'UNSUBSCRIBED',
+};
+
+const isWatch = viewerSubscription =>
+  viewerSubscription === VIEWER_SUBSCRIPTIONS.SUBSCRIBED;
 
 const RepositoryItem = ({
   id,
@@ -36,17 +39,53 @@ const RepositoryItem = ({
         <Link href={url}>{name}</Link>
       </h2>
     </div>
+
     <div>
-      <Mutation mutation={STAR_REPOSITOY} variables={{ id }}>
-        {addStar => (
+      <Mutation
+        mutation={WATCH_REPOSITORY}
+        variables={{
+          id,
+          viewerSubscription: isWatch(viewerSubscription)
+            ? VIEWER_SUBSCRIPTIONS.UNSUBSCRIBED
+            : VIEWER_SUBSCRIPTIONS.SUBSCRIBED,
+        }}
+      >
+        {(updateSubscription, { data, loading, error }) => (
           <Button
-            className={'Repository-title-action'}
-            onClick={addStar}
+            className="RepositoryItem-title-action"
+            data-test-id="updateSubscription"
+            onClick={updateSubscription}
           >
-            {stargazers.totalCount} Star
+            {watchers.totalCount}{' '}
+            {isWatch(viewerSubscription) ? 'Unwatch' : 'Watch'}
           </Button>
         )}
       </Mutation>
+
+      {!viewerHasStarred ? (
+        <Mutation mutation={STAR_REPOSITORY} variables={{ id }}>
+          {(addStar, { data, loading, error }) => (
+            <Button
+              className={'Repository-title-action'}
+              onClick={addStar}
+            >
+              {stargazers.totalCount} Star
+            </Button>
+          )}
+        </Mutation>
+      ) : (
+        <Mutation mutation={UNSTAR_REPOSITORY} variables={{ id }}>
+          {(removeStar, { data, loading, error }) => (
+            <Button
+              className={'Repository-title-action'}
+              onClick={removeStar}
+            >
+              {stargazers.totalCount} Unstar
+            </Button>
+          )}
+        </Mutation>
+      )}
+      {/* Here comes your updateSubscription mutation */}
     </div>
     <div className="RepositoryItem-description">
       <div
