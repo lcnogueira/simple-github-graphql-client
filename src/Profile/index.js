@@ -43,8 +43,8 @@ const GET_REPOSITORIES_OF_CURRENT_USER = gql`
 const Profile = () => (
   <Query query={GET_REPOSITORIES_OF_CURRENT_USER}>
     {({ data, loading, error }) => {
-      if(error){
-        return <ErrorMessage error={error} />
+      if (error) {
+        return <ErrorMessage error={error} />;
       }
       const { viewer } = data;
 

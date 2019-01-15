@@ -5,7 +5,7 @@ import Link from '../../Link';
 import { Mutation } from 'react-apollo';
 import Button from '../../Button';
 
-import '../../style.css';
+import '../style.css';
 
 import {
   UNSTAR_REPOSITORY,
