@@ -21,6 +21,17 @@ const VIEWER_SUBSCRIPTIONS = {
 const isWatch = viewerSubscription =>
   viewerSubscription === VIEWER_SUBSCRIPTIONS.SUBSCRIBED;
 
+const updateAddStar = (
+  client,
+  {
+    data: {
+      addStar: {
+        starrable: { id },
+      },
+    },
+  },
+) => {};
+
 const RepositoryItem = ({
   id,
   name,
@@ -63,7 +74,11 @@ const RepositoryItem = ({
       </Mutation>
 
       {!viewerHasStarred ? (
-        <Mutation mutation={STAR_REPOSITORY} variables={{ id }}>
+        <Mutation
+          mutation={STAR_REPOSITORY}
+          variables={{ id }}
+          update={updateAddStar}
+        >
           {(addStar, { data, loading, error }) => (
             <Button
               className={'Repository-title-action'}
