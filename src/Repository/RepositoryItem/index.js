@@ -85,7 +85,6 @@ const RepositoryItem = ({
           )}
         </Mutation>
       )}
-      {/* Here comes your updateSubscription mutation */}
     </div>
     <div className="RepositoryItem-description">
       <div
