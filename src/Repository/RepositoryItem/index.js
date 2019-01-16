@@ -160,6 +160,16 @@ const RepositoryItem = ({
         <Mutation
           mutation={STAR_REPOSITORY}
           variables={{ id }}
+          optimisticResponse={{
+            addStar: {
+              __typename: 'Mutation',
+              starrable: {
+                __typename: 'Repository',
+                id,
+                viewerHasStarred: !viewerHasStarred,
+              },
+            },
+          }}
           update={updateAddStar}
         >
           {(addStar, { data, loading, error }) => (
@@ -175,6 +185,16 @@ const RepositoryItem = ({
         <Mutation
           mutation={UNSTAR_REPOSITORY}
           variables={{ id }}
+          optimisticResponse={{
+            removeStar: {
+              __typename: 'Mutation',
+              starrable: {
+                __typename: 'Repository',
+                id,
+                viewerHasStarred: !viewerHasStarred,
+              },
+            },
+          }}
           update={updateRemoveStar}
         >
           {(removeStar, { data, loading, error }) => (
