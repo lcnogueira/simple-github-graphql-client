@@ -1,10 +1,31 @@
 import React, { Fragment } from 'react';
-
 import RepositoryItem from '../RepositoryItem';
+import FetchMore from '../../FetchMore';
 
 import '../style.css';
 
-const RepositoryList = ({ repositories, fetchMore }) => (
+const updateQuery = (previousResult, { fetchMoreResult }) => {
+  if (!fetchMoreResult) {
+    return previousResult;
+  }
+
+  return {
+    ...previousResult,
+    viewer: {
+      ...previousResult.viewer,
+      repositories: {
+        ...previousResult.viewer.repositories,
+        ...fetchMoreResult.viewer.repositories,
+        edges: [
+          ...previousResult.viewer.repositories.edges,
+          ...fetchMoreResult.viewer.repositories.edges,
+        ],
+      },
+    },
+  };
+};
+
+const RepositoryList = ({ repositories, loading, fetchMore }) => (
   <Fragment>
     {repositories.edges.map(({ node }) => (
       <div key={node.id} className="RepositoryItem">
@@ -12,20 +33,17 @@ const RepositoryList = ({ repositories, fetchMore }) => (
       </div>
     ))}
 
-    {repositories.pageInfo.hasNextPage && (
-      <button
-        type="button"
-        onClick={() =>
-          fetchMore({
-            variables: {
-              cursor: repositories.pageInfo.endCursor,
-            },
-          })
-        }
-      >
-        More repositories
-      </button>
-    )}
+    <FetchMore
+      loading={loading}
+      hasNextPage={repositories.pageInfo.hasNextPage}
+      variables={{
+        cursor: repositories.pageInfo.endCursor,
+      }}
+      updateQuery={updateQuery}
+      fetchMore={fetchMore}
+    >
+      Repositories
+    </FetchMore>
   </Fragment>
 );
 
