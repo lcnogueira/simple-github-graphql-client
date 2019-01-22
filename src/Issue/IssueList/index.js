@@ -5,8 +5,29 @@ import gql from 'graphql-tag';
 import IssueItem from '../IssueItem';
 import Loading from '../../Loading';
 import ErrorMessage from '../../Error';
+import { ButtonUnobstrusive } from '../../Button';
 
 import './style.css';
+
+const ISSUE_STATES = {
+  NONE: 'NONE',
+  OPEN: 'OPEN',
+  CLOSED: 'CLOSED',
+};
+
+const TRANSITION_LABELS = {
+  [ISSUE_STATES.NONE]: 'Show Open Issues',
+  [ISSUE_STATES.OPEN]: 'Show Closed Issues',
+  [ISSUE_STATES.CLOSED]: 'Hide Issues',
+};
+
+const TRANSITION_STATE = {
+  [ISSUE_STATES.NONE]: ISSUE_STATES.OPEN,
+  [ISSUE_STATES.OPEN]: ISSUE_STATES.CLOSED,
+  [ISSUE_STATES.CLOSED]: ISSUE_STATES.NONE,
+};
+
+const isShow = issueState => issueState !== ISSUE_STATES.NONE;
 
 const GET_ISSUES_OF_REPOSITORY = gql`
   query($repositoryOwner: String!, $repositoryName: String!) {
@@ -27,35 +48,69 @@ const GET_ISSUES_OF_REPOSITORY = gql`
   }
 `;
 
-const Issues = ({ repositoryOwner, repositoryName }) => (
-  <div className="Issues">
-    <Query
-      query={GET_ISSUES_OF_REPOSITORY}
-      variables={{
-        repositoryOwner,
-        repositoryName,
-      }}
-    >
-      {({ data, loading, error }) => {
-        if (error) {
-          return <ErrorMessage error={error} />;
-        }
+class Issues extends React.Component {
+  state = {
+    issueState: ISSUE_STATES.NONE,
+  };
 
-        const { repository } = data;
+  onChangeIssueState = nextIssueState => {
+    this.setState({ issueState: nextIssueState });
+  };
 
-        if (loading && !repository) {
-          return <Loading />;
-        }
+  render() {
+    const { issueState } = this.state;
+    const { repositoryOwner, repositoryName } = this.props;
 
-        if (!repository.issues.edges.length) {
-          return <div className="IssueList">No issues...</div>;
-        }
+    return (
+      <div className="Issues">
+        <ButtonUnobstrusive
+          onClick={() =>
+            this.onChangeIssueState(TRANSITION_STATE[issueState])
+          }
+        >
+          {TRANSITION_LABELS[issueState]}
+        </ButtonUnobstrusive>
+        {isShow(issueState) && (
+          <Query
+            query={GET_ISSUES_OF_REPOSITORY}
+            variables={{
+              repositoryOwner,
+              repositoryName,
+            }}
+          >
+            {({ data, loading, error }) => {
+              if (error) {
+                return <ErrorMessage error={error} />;
+              }
 
-        return <IssueList issues={repository.issues} />;
-      }}
-    </Query>
-  </div>
-);
+              const { repository } = data;
+
+              if (loading && !repository) {
+                return <Loading />;
+              }
+
+              const filteredRepository = {
+                issues: {
+                  edges: repository.issues.edges.filter(
+                    issue => issue.node.state === issueState,
+                  ),
+                },
+              };
+
+              console.log(JSON.stringify(repository));
+
+              if (!filteredRepository.issues.edges.length) {
+                return <div className="IssueList">No issues...</div>;
+              }
+
+              return <IssueList issues={filteredRepository.issues} />;
+            }}
+          </Query>
+        )}
+      </div>
+    );
+  }
+}
 
 const IssueList = ({ issues }) => (
   <div className="IssueList">
